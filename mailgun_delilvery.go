@@ -1,7 +1,8 @@
 package delivery
 
 import (
-	"github.com/mailgun/mailgun-go"
+	"context"
+	"github.com/mailgun/mailgun-go/v3"
 )
 
 
@@ -17,9 +18,23 @@ func NewMailgunDelivery(domain string, apiKey string, from string) *MailgunDeliv
 }
 
 
-func (m *MailgunDelivery) Send(destination, message string) error {
+func (m *MailgunDelivery) Send(ctx context.Context, destination, message string) error {
 	msg := m.impl.NewMessage(m.from, "", message, destination)
-	_, _, err := m.impl.Send(msg)
+	_, _, err := m.impl.Send(ctx, msg)
+	return err
+}
+
+
+func (m *MailgunDelivery)SendTemplate(ctx context.Context, destination, subject, template string, variables map[string]string)error{
+	msg := m.impl.NewMessage(m.from, subject, "", destination)
+	msg.SetTemplate(template)
+	for key, value := range variables {
+		err := msg.AddVariable(key, value);
+		if err != nil{
+			panic(err)
+		}
+	}
+	_, _, err := m.impl.Send(ctx, msg)
 	return err
 }
 
